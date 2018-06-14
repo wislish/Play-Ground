@@ -58,14 +58,19 @@ public class WordNet {
         }
 
         int root = -1;
+
         for (int v = 0; v < dg.V(); v++) {
-            if (dg.indegree(v) == dg.V() - 1) {
+            if (dg.outdegree(v) == 0 && dg.indegree(v) > 0) {
                 if (root == -1) {
                     root = v;
                 } else {
                     throw new IllegalArgumentException("Multiple Roots");
                 }
             }
+        }
+
+        if (root == -1) {
+            throw new IllegalArgumentException("No Roots");
         }
 
         sap = new SAP(dg);
@@ -115,6 +120,8 @@ public class WordNet {
 
     // do unit testing of this class
     public static void main(String[] args) {
-        System.out.println("write test!");
+        WordNet wn = new WordNet("data/synsets15.txt", "data/hypernyms15Path.txt");
+        System.out.println(wn.isNoun("a"));
+
     }
 }
