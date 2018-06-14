@@ -1,23 +1,17 @@
-//package wordNet;
-
 import edu.princeton.cs.algs4.DirectedCycle;
 import edu.princeton.cs.algs4.In;
 
-import java.lang.IllegalArgumentException;
 import java.util.HashMap;
-import java.util.HashSet;
+import java.util.LinkedList;
 import java.util.Map;
-import java.util.Set;
 
 import edu.princeton.cs.algs4.Digraph;
-import edu.princeton.cs.algs4.StdOut;
 
 public class WordNet {
 
-    private Map<Integer, String> idToWord;      // mapping between id and the noun
-    private Digraph dg;
-    private int root = -1;
-    private Set<String> wordSet;
+    private final Map<Integer, String> idToWord;      // mapping between id and the noun
+    private final Map<String, LinkedList<Integer>> nounSets;
+    private final SAP sap;
 
     // constructor takes the name of the two input files
     public WordNet(String synsets, String hypernyms) {
@@ -25,22 +19,26 @@ public class WordNet {
 
         In nouns = new In(synsets);
         idToWord = new HashMap<>();
-        wordSet = new HashSet<>();
+        nounSets = new HashMap<>();
         int numOfVertices = 0;
         // find all the words
         while (nouns.hasNextLine()) {
-            String l = nouns.readLine();
-            int id = Integer.parseInt(l.split(",")[0]);
-            String n = l.split(",")[1];
-            if (!wordSet.contains(n)){
-                idToWord.put(id, n);
-                wordSet.add(n);
+            String line = nouns.readLine();
+            int id = Integer.parseInt(line.split(",")[0]);
+            String n = line.split(",")[1];
+            idToWord.put(id, n);
+
+            for (String w : n.split("\\s+")) {
+//                System.out.println(w);
+                LinkedList<Integer> temp = nounSets.getOrDefault(w, new LinkedList<>());
+                temp.add(id);
+                nounSets.put(w, temp);
             }
 
             numOfVertices++;
         }
 
-        dg = new Digraph(numOfVertices);
+        Digraph dg = new Digraph(numOfVertices);
 
         // construct the edges
         In links = new In(hypernyms);
@@ -59,8 +57,9 @@ public class WordNet {
             throw new IllegalArgumentException("Not a valid DAG");
         }
 
+        int root = -1;
         for (int v = 0; v < dg.V(); v++) {
-            if (dg.indegree(v) == 0) {
+            if (dg.indegree(v) == dg.V() - 1) {
                 if (root == -1) {
                     root = v;
                 } else {
@@ -69,35 +68,53 @@ public class WordNet {
             }
         }
 
+        sap = new SAP(dg);
 
     }
 
     // returns all WordNet nouns
     public Iterable<String> nouns() {
-        return idToWord.values();
+        return nounSets.keySet();
     }
 
     // is the word a WordNet noun?
-    public boolean isNoun(String word){
-
-        return wordSet.contains(word);
+    public boolean isNoun(String word) {
+        if (!nounSets.containsKey(word)) {
+            throw new IllegalArgumentException("Non existed noun!");
+        }
+        return true;
     }
 
     // distance between nounA and nounB (defined below)
-    public int distance(String nounA, String nounB){
-        return 1;
+    public int distance(String nounA, String nounB) {
+
+        if (!isNoun(nounA) || !isNoun(nounB)) {
+            throw new IllegalArgumentException("Non existed noun!");
+        }
+
+        LinkedList<Integer> synsetA = nounSets.get(nounA);
+        LinkedList<Integer> synsetB = nounSets.get(nounB);
+
+        return sap.length(synsetA, synsetB);
 
     }
 
     // a synset (second field of synsets.txt) that is the common ancestor of nounA and nounB
     // in a shortest ancestral path (defined below)
-    public String sap(String nounA, String nounB){
+    public String sap(String nounA, String nounB) {
 
-        return "";
+        if (!isNoun(nounA) || !isNoun(nounB)) {
+            throw new IllegalArgumentException("Non existed noun!");
+        }
+
+        LinkedList<Integer> synsetA = nounSets.get(nounA);
+        LinkedList<Integer> synsetB = nounSets.get(nounB);
+
+        return idToWord.get(sap.ancestor(synsetA, synsetB));
     }
 
     // do unit testing of this class
-    public static void main(String[] args){
-
+    public static void main(String[] args) {
+        System.out.println("write test!");
     }
 }
