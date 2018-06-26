@@ -25,8 +25,23 @@
 #                  highest to lowest rank).
 
 def poker(hands):
-    "Return the best hand: poker([hand,...]) => hand"
-    return max(hands, key=hand_rank)
+    "Return the best hand: poker([hand,...]) => [hand,...]"
+
+    # need to deal with ties.
+    return allmax(hands, key=hand_rank)
+
+def allmax(iterable, key=None):
+    "Return a list of all items equal to the max of the iterable."
+    result, maxval = [], None
+    key = key or (lambda x:x)
+    res = []
+    for x in iterable:
+        xval = key(x)
+        if not result or xval > maxval:
+            result, maxval = [x], xval
+        elif xval == maxval:
+            result.append(x)
+    return result
 
 def card_ranks(hand):
     "Return a list of the ranks, sorted with higher first."
@@ -37,7 +52,9 @@ def card_ranks(hand):
     # ranks = [mapping[r] if r in mapping else int(r) for r, s in cards]
 
     ranks.sort(reverse=True)
-    return ranks
+
+    # deal with the problem of Ace low straight.
+    return [5,4,3,2,1] if (ranks == [14, 5, 4, 3, 2]) else ranks
 
 def straight(ranks):
     "Return True if the ordered ranks form a 5-card straight."
@@ -113,6 +130,7 @@ def test():
     assert flush(fk) == False
 
     # ? can compare list directly?
+    # Yes, it can compare in Python
     assert card_ranks(sf) == [10, 9, 8, 7, 6]
     assert card_ranks(fk) == [9, 9, 9, 9, 7]
     assert card_ranks(fh) == [10, 10, 10, 7, 7]
