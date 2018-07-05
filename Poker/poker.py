@@ -23,6 +23,23 @@
 # card_ranks(hand) returns an ORDERED tuple of the ranks
 #                  in a hand (where the order goes from
 #                  highest to lowest rank).
+import random
+
+def deal(numhands, n=5, deck=[r+s for r in '23456789TJQKA' for s in 'SHDC']):
+    "shuffle the deck and deal out numhands n-card hands."
+    random.shuffle(deck)
+    return [[deck[i*n:n*(i+1)]] for i in range(numhands)]
+
+def hand_percentages(n=1000):
+    "Sample n random hands and print a table of percentages for each type of hand."
+    counts = [0] * 9
+    for i in range(n//10):
+        for hand in deal(10):
+            ranking = hand_rank(hand)[0]
+            counts[ranking] += 1
+
+    # for i in reversed(range(9)):
+    #     print("%14s: %6.3f %%" % (hand) )
 
 def poker(hands):
     "Return the best hand: poker([hand,...]) => [hand,...]"
